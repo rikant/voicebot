@@ -1,4 +1,3 @@
-
 import os
 import asyncio
 import json
@@ -14,6 +13,9 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+
+if not OPENAI_API_KEY:
+    raise Exception("OPENAI_API_KEY not found in environment.")
 
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 deepgram = Deepgram(DEEPGRAM_API_KEY)
@@ -51,24 +53,33 @@ async def voicebot(websocket: WebSocket):
             frame = await websocket.receive_bytes()
             await dg_connection.send(frame)
         except Exception as e:
-            print(f"[ERROR] WebSocket failed: {e}")
+            print(f"[ERROR] WebSocket error: {e}")
             break
 
 async def ask_chatgpt(user_input: str) -> str:
-    response = await openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You're a concise, real-time voice assistant. Keep responses under 50 words."},
-            {"role": "user", "content": user_input}
-        ],
-        max_tokens=120
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        response = await openai_client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful and polite voice assistant. Keep responses under 50 words."},
+                {"role": "user", "content": user_input}
+            ],
+            max_tokens=100
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"[ERROR] ChatGPT call failed: {e}")
+        return "Sorry, I couldn't process that."
 
 async def text_to_speech(text: str) -> bytes:
-    tts = gTTS(text=text)
-    output_path = "response.mp3"
-    tts.save(output_path)
-    async with aiofiles.open(output_path, mode='rb') as f:
-        data = await f.read()
-    return data
+    try:
+        if not text.strip():
+            return b''
+        tts = gTTS(text=text)
+        output_path = "response.mp3"
+        tts.save(output_path)
+        async with aiofiles.open(output_path, mode='rb') as f:
+            return await f.read()
+    except Exception as e:
+        print(f"[ERROR] TTS failed: {e}")
+        return b''
