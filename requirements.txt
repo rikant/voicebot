@@ -1,8 +1,7 @@
-
 fastapi
 uvicorn
+aiofiles
 openai
 gtts
-deepgram-sdk
-aiofiles
 python-dotenv
+deepgram-sdk
