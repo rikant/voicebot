@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 aiofiles
-openai
 gtts
+openai
 python-dotenv
-deepgram-sdk
+deepgram-sdk==2.12.0
