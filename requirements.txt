@@ -1,0 +1,8 @@
+
+fastapi
+uvicorn
+openai
+gtts
+deepgram-sdk
+aiofiles
+python-dotenv
